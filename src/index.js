@@ -8,7 +8,7 @@ import './styles.css'
 
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import {HistogramBenchmark} from './histogram-benchmark'
+import {HistogramBenchmark, HistogramBenchmark2} from './histogram-benchmark'
 
 const defaultLayoutProps = {
 	w: 4,
@@ -22,6 +22,7 @@ const originalLayout = ls.read() || [
 	{...defaultLayoutProps, i: 'a'},
 	{...defaultLayoutProps, i: 'b', x: 4},
 	{...defaultLayoutProps, i: 'c', x: 8},
+	{...defaultLayoutProps, i: 'd', x: 0},
 ]
 
 const App = () => {
@@ -60,9 +61,17 @@ const App = () => {
 					getY={d => d.consumo}
 					getX={d => d.anno}
 					renderTooltip={d => <span>Consumo: {d.consumo}</span>}
-					colors={['pink', 'green', 'blue']}
-					// backgroundColor="purple"
-					// axisColor="azure"
+					colors={['#8DE4AF', '#96C9EF', '#FC4444']}
+					benchmarks={[{color: 'red', value: 320}, {color: 'lightgreen', value: 180}]}
+				/>
+			</div>
+			<div key="d" style={{backgroundColor: 'red'}}>
+				<HistogramBenchmark2
+					getY={d => d.consumo}
+					getX={d => d.anno}
+					renderTooltip={d => <span>Consumo: {d.consumo}</span>}
+					colors={['#8DE4AF', '#FBEFC3', '#FC4444']}
+					benchmarks={[{color: 'red', value: 320}, {color: 'lightgreen', value: 180}]}
 				/>
 			</div>
 		</GridLayout>
