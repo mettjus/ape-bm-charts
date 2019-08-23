@@ -1,13 +1,11 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import * as d3 from 'd3'
-import { withSize } from 'react-sizeme'
 import useResizeObserver from 'use-resize-observer'
 
-export const Histogram = () => {
+const InnerHistogram = ({ data = null } = {}) => {
   const [ref, width, height] = useResizeObserver()
-  const [data, setData] = useState(null)
   function draw(target, data) {
-    console.log('draw', target)
+    // console.log('draw', target)
     if (!target) return
     while (target.firstChild) target.firstChild.remove()
 
@@ -56,6 +54,8 @@ export const Histogram = () => {
       .select(target)
       .append('div')
       .style('opacity', 0)
+      .style('position', 'absolute')
+      .style('top', '10px')
       .attr('class', 'tooltip')
       .style('background-color', 'black')
       .style('color', 'white')
@@ -69,15 +69,14 @@ export const Histogram = () => {
         .transition()
         .duration(100)
         .style('opacity', 1)
-      tooltip
-        .html('Range: ' + d.x0 + ' - ' + d.x1)
-        .style('left', d3.mouse(this)[0] + 20 + 'px')
-        .style('top', d3.mouse(this)[1] + 'px')
+      tooltip.html('Range: ' + d.x0 + ' - ' + d.x1)
+      // .style('left', d3.mouse(ref.current)[0] + 20 + 'px')
+      // .style('top', d3.mouse(ref.current)[1] + 'px')
     }
     var moveTooltip = function(d) {
       tooltip
-        .style('left', d3.mouse(this)[0] + 20 + 'px')
-        .style('top', d3.mouse(this)[1] + 'px')
+        .style('left', d3.mouse(ref.current)[0] + 20 + 'px')
+        .style('top', d3.mouse(ref.current)[1] + 'px')
     }
     // A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
     var hideTooltip = function(d) {
@@ -105,19 +104,15 @@ export const Histogram = () => {
   }
 
   useEffect(() => {
-    console.log('onSize', width, height)
+    // console.log('onSize', width, height)
     draw(ref.current, data || [])
   }, [data, width, height])
 
-  useEffect(() => {
-    d3.csv(
-      'https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/1_OneNum.csv',
-    ).then(data => setData(data))
-  }, [])
   return (
     <div
       ref={ref}
       style={{
+        position: 'relative',
         backgroundColor: 'tomato',
         width: '100%',
         height: '100%',
@@ -125,4 +120,16 @@ export const Histogram = () => {
       }}
     />
   )
+}
+
+export const Histogram = () => {
+  const [data, setData] = useState(null)
+
+  useEffect(() => {
+    d3.csv(
+      'https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/1_OneNum.csv',
+    ).then(data => setData(data))
+  }, [])
+
+  return <InnerHistogram data={data} />
 }

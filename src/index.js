@@ -7,15 +7,15 @@ import './styles.css'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
-function _App() {
+function App() {
   return (
-    <div>
+    <div style={{ height: 300 }}>
       <Histogram />
     </div>
   )
 }
 
-const App = () => {
+const _LayoutApp = () => {
   var layout = [
     { i: 'a', x: 0, y: 0, w: 3, h: 4 },
     { i: 'b', x: 1, y: 0, w: 3, h: 2, minW: 2, maxW: 4 },
