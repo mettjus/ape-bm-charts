@@ -6,7 +6,7 @@ import useResizeObserver from 'use-resize-observer'
 const data = [
 	{
 		anno: 2014,
-		consumo: 300,
+		consumo: 340,
 	},
 	{
 		anno: 2015,
@@ -26,12 +26,13 @@ const data = [
 	},
 	{
 		anno: 2019,
-		consumo: 195,
+		consumo: 160,
 	},
 ]
 
-export const Histogram = ({
-	color = '#69b3a2',
+export const HistogramBenchmark = ({
+	colors = ['#69b3a2'],
+	benchmarks = [{color: 'red', value: 320}, {color: 'brown', value: 180}],
 	backgroundColor = 'white',
 	axisColor = 'black',
 	getY = d => d.consumo,
@@ -46,7 +47,7 @@ export const Histogram = ({
 		while (target.firstChild) target.firstChild.remove()
 
 		const xDomain = data.map(getX)
-		const yDomain = [0, d3.max(data.map(getY)) * 1.1]
+		const yDomain = [0, d3.max([...data.map(getY), ...benchmarks.map(b => b.value)]) * 1.1]
 
 		// set the dimensions and margins of the graph
 		var margin = {top: 10, right: 30, bottom: 30, left: 40},
@@ -141,21 +142,45 @@ export const Histogram = ({
 				.style('opacity', 0)
 		}
 
-		// append the bar rectangles to the svg element
-		svg
-			.selectAll('rect')
-			.data(data)
-			.enter()
-			.append('rect')
-			.attr('x', 1)
-			.attr('transform', d => 'translate(' + x(getX(d)) + ',' + y(getY(d)) + ')')
-			.attr('width', x.bandwidth())
-			.attr('height', d => height - y(getY(d)))
-			.style('fill', color)
-			// Show tooltip on hover
-			.on('mouseover', showTooltip)
-			.on('mousemove', moveTooltip)
-			.on('mouseleave', hideTooltip)
+		const sortedBenchmarks = benchmarks
+			.slice()
+			.sort((a, b) => (a.value > b.value ? 1 : a.value < b.value ? -1 : 0))
+
+		const prepped = [
+			data.map(d => ({...d, _v0: 0, _v1: Math.min(sortedBenchmarks[0].value, getY(d))})),
+			data
+				.filter(d => getY(d) >= sortedBenchmarks[0].value)
+				.map(d => ({
+					...d,
+					_v0: sortedBenchmarks[0].value,
+					_v1: Math.min(sortedBenchmarks[1].value, getY(d)),
+				})),
+			data
+				.filter(d => getY(d) >= sortedBenchmarks[1].value)
+				.map(d => ({...d, _v0: sortedBenchmarks[1].value, _v1: getY(d)})),
+		]
+
+		prepped.forEach((data, index) => {
+			// append the bar rectangles to the svg element
+			svg
+				.selectAll('rect._' + index)
+				.data(data)
+				.enter()
+				.append('rect')
+				.attr('class', '_' + index)
+				.attr('x', 1)
+				.attr(
+					'transform',
+					d => 'translate(' + x(getX(d)) + ',' + (y(d._v1 - d._v0) - (height - y(d._v0))) + ')'
+				)
+				.attr('width', x.bandwidth())
+				.attr('height', d => height - y(d._v1 - d._v0))
+				.style('fill', colors[index])
+				// Show tooltip on hover
+				.on('mouseover', showTooltip)
+				.on('mousemove', moveTooltip)
+				.on('mouseleave', hideTooltip)
+		})
 	}
 
 	useEffect(() => {
