@@ -339,9 +339,7 @@ export const HistogramBenchmark2 = ({
 			.enter()
 			.append('rect')
 			.attr('x', 1)
-			.attr('transform', d => 'translate(' + x(getX(d)) + ',' + y(getY(d)) + ')')
 			.attr('width', x.bandwidth())
-			.attr('height', d => height - y(getY(d)))
 			.style('fill', d =>
 				getY(d) > benchmarks[0].value
 					? colors[2]
@@ -349,6 +347,8 @@ export const HistogramBenchmark2 = ({
 					? colors[1]
 					: colors[0]
 			)
+			.attr('transform', d => 'translate(' + x(getX(d)) + ',' + height + ')')
+			.attr('height', 0)
 			// Show tooltip on hover
 			.on('mouseover', (d, index, rects) => {
 				// d3.select(rects[index]).style('-webkit-filter', 'drop-shadow( 3px 3px 2px rgba(0, 0, 0, .7))')
@@ -361,20 +361,28 @@ export const HistogramBenchmark2 = ({
 				// d3.select(rects[index]).style('box-shadow', null)
 				hideTooltip()
 			})
+			.transition()
+			.delay((_d, index) => 500 + index * 30)
+			.duration(500)
+			.attr('transform', d => 'translate(' + x(getX(d)) + ',' + y(getY(d)) + ')')
+			.attr('height', d => height - y(getY(d)))
 
 		svg.selectAll('path.benchmark').remove()
 
-		sortedBenchmarks.forEach(benchmark => {
+		sortedBenchmarks.forEach((benchmark, index) => {
 			svg
 				.append('path')
 				.attr('class', 'benchmark')
-				.attr('d', d3.line()([[0, y(benchmark.value)], [width, y(benchmark.value)]]))
+				.attr('d', d3.line()([[0, y(benchmark.value)], [0, y(benchmark.value)]]))
 				.attr('stroke', benchmark.color)
 				.attr('stroke-width', 2)
 				.attr('fill', 'none')
 				.on('mouseover', () => showTooltip(`Benchmark: ${benchmark.value}`))
 				.on('mousemove', moveTooltip)
 				.on('mouseleave', hideTooltip)
+				.transition(1000)
+				.delay(1000 + index * 200)
+				.attr('d', d3.line()([[0, y(benchmark.value)], [width, y(benchmark.value)]]))
 		})
 	}
 
