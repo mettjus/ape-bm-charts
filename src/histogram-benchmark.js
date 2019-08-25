@@ -14,7 +14,7 @@ const data = [
 	},
 	{
 		anno: 2016,
-		consumo: 295,
+		consumo: 325,
 	},
 	{
 		anno: 2017,
@@ -118,16 +118,16 @@ export const HistogramBenchmark = ({
 
 		// A function that change this tooltip when the user hover a point.
 		// Its opacity is set to 1: we can now see it. Plus it set the text and position of tooltip depending on the datapoint (d)
-		var showTooltip = function(d) {
+		var showTooltip = function(content) {
 			tooltip
 				.transition()
 				.duration(100)
 				.style('opacity', 1)
-			tooltip.html(renderToStaticMarkup(renderTooltip(d)))
+			tooltip.html(content)
 			// .style('left', d3.mouse(ref.current)[0] + 20 + 'px')
 			// .style('top', d3.mouse(ref.current)[1] + 'px')
 		}
-		var moveTooltip = function(d) {
+		var moveTooltip = function() {
 			tooltip.style('top', d3.mouse(ref.current)[1] - 20 + 'px')
 			const mouseX = d3.mouse(ref.current)[0]
 			mouseX < 200
@@ -135,7 +135,7 @@ export const HistogramBenchmark = ({
 				: tooltip.style('left', mouseX - 20 - 100 + 'px')
 		}
 		// A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
-		var hideTooltip = function(d) {
+		var hideTooltip = function() {
 			tooltip
 				.transition()
 				.duration(200)
@@ -177,21 +177,24 @@ export const HistogramBenchmark = ({
 				.attr('height', d => height - y(d._v1 - d._v0))
 				.style('fill', colors[index])
 				// Show tooltip on hover
-				.on('mouseover', showTooltip)
+				.on('mouseover', d => showTooltip(renderToStaticMarkup(renderTooltip(d))))
 				.on('mousemove', moveTooltip)
 				.on('mouseleave', hideTooltip)
 		})
 
 		svg.selectAll('path.benchmark').remove()
 
-		sortedBenchmarks.forEach(({color, value}) => {
+		sortedBenchmarks.forEach(benchmark => {
 			svg
 				.append('path')
 				.attr('class', 'benchmark')
-				.attr('d', d3.line()([[0, y(value)], [width, y(value)]]))
-				.attr('stroke', color)
+				.attr('d', d3.line()([[0, y(benchmark.value)], [width, y(benchmark.value)]]))
+				.attr('stroke', benchmark.color)
 				.attr('stroke-width', 2)
 				.attr('fill', 'none')
+				.on('mouseover', () => showTooltip(`Benchmark: ${benchmark.value}`))
+				.on('mousemove', moveTooltip)
+				.on('mouseleave', hideTooltip)
 		})
 	}
 
@@ -213,7 +216,6 @@ export const HistogramBenchmark = ({
 		/>
 	)
 }
-
 
 export const HistogramBenchmark2 = ({
 	colors = ['#8DE4AF', '#96C9EF', '#FC4444'],
@@ -303,16 +305,16 @@ export const HistogramBenchmark2 = ({
 
 		// A function that change this tooltip when the user hover a point.
 		// Its opacity is set to 1: we can now see it. Plus it set the text and position of tooltip depending on the datapoint (d)
-		var showTooltip = function(d) {
+		var showTooltip = function(content) {
 			tooltip
 				.transition()
 				.duration(100)
 				.style('opacity', 1)
-			tooltip.html(renderToStaticMarkup(renderTooltip(d)))
+			tooltip.html(content)
 			// .style('left', d3.mouse(ref.current)[0] + 20 + 'px')
 			// .style('top', d3.mouse(ref.current)[1] + 'px')
 		}
-		var moveTooltip = function(d) {
+		var moveTooltip = function() {
 			tooltip.style('top', d3.mouse(ref.current)[1] - 20 + 'px')
 			const mouseX = d3.mouse(ref.current)[0]
 			mouseX < 200
@@ -320,7 +322,7 @@ export const HistogramBenchmark2 = ({
 				: tooltip.style('left', mouseX - 20 - 100 + 'px')
 		}
 		// A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
-		var hideTooltip = function(d) {
+		var hideTooltip = function() {
 			tooltip
 				.transition()
 				.duration(200)
@@ -341,23 +343,38 @@ export const HistogramBenchmark2 = ({
 			.attr('width', x.bandwidth())
 			.attr('height', d => height - y(getY(d)))
 			.style('fill', d =>
-				getY(d) > benchmarks[0].value ? colors[2] : getY(d) > benchmarks[1].value ? colors[1] : colors[0]
+				getY(d) > benchmarks[0].value
+					? colors[2]
+					: getY(d) > benchmarks[1].value
+					? colors[1]
+					: colors[0]
 			)
 			// Show tooltip on hover
-			.on('mouseover', showTooltip)
+			.on('mouseover', (d, index, rects) => {
+				// d3.select(rects[index]).style('-webkit-filter', 'drop-shadow( 3px 3px 2px rgba(0, 0, 0, .7))')
+				// d3.select(rects[index]).style('box-shadow', '0,0,10,black')
+				// console.log(rects[index], d3.select(rects[index]))
+				showTooltip(renderToStaticMarkup(renderTooltip(d)))
+			})
 			.on('mousemove', moveTooltip)
-			.on('mouseleave', hideTooltip)
+			.on('mouseleave', (_d, index, rects) => {
+				// d3.select(rects[index]).style('box-shadow', null)
+				hideTooltip()
+			})
 
 		svg.selectAll('path.benchmark').remove()
 
-		sortedBenchmarks.forEach(({color, value}) => {
+		sortedBenchmarks.forEach(benchmark => {
 			svg
 				.append('path')
 				.attr('class', 'benchmark')
-				.attr('d', d3.line()([[0, y(value)], [width, y(value)]]))
-				.attr('stroke', color)
+				.attr('d', d3.line()([[0, y(benchmark.value)], [width, y(benchmark.value)]]))
+				.attr('stroke', benchmark.color)
 				.attr('stroke-width', 2)
 				.attr('fill', 'none')
+				.on('mouseover', () => showTooltip(`Benchmark: ${benchmark.value}`))
+				.on('mousemove', moveTooltip)
+				.on('mouseleave', hideTooltip)
 		})
 	}
 
